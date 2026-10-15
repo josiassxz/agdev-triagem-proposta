@@ -1,0 +1,8 @@
+{
+  "id": "P-005",
+  "area_degradada_ha": 300,
+  "area_car_ha": 700,
+  "alerta_desmatamento": null,
+  "situacao_car": "Ativo",
+  "situacao_cadastral": "Pendente de regularização"
+}

@@ -1,0 +1,32 @@
+# Perguntas técnicas adicionais
+
+As respostas abaixo descrevem minha experiência prática, distinguindo atividades que executei diretamente de entregas realizadas em equipe. Onde meu contato foi exploratório, deixo isso explícito.
+
+## 1. GitHub em equipe
+
+Tenho experiência de versionamento colaborativo principalmente com **Git e GitLab**, em projetos da DPE-GO e da Prodesp; também uso GitHub em projetos próprios. Na Prodesp, participei de uma entrega do `prodesp-erp` por **merge request**, envolvendo APIs de clientes, notas fiscais e recibos, com validação em homologação antes da promoção para produção; em outro projeto, trabalhei na branch `envio-faturas` do `wallet-dados-app`. Conheço o fluxo com `develop`, branches de trabalho, `release/x.y.z`, merge para a branch principal e tags, embora as aprovações, permissões e liberações sigam a governança de cada equipe, não uma regra definida exclusivamente por mim. Um problema concreto que enfrentei foi a rejeição de um *push* pelo GitLab por divergência entre a autoria dos commits e a conta utilizada, o que reforçou a importância de conferir a identidade Git e a rastreabilidade antes de alterar ou republicar histórico.
+
+## 2. Google Cloud
+
+Meu contato prático com Google Cloud ocorreu em uma **plataforma de transcrição de áudio** desenvolvida em Java/Spring, usando **Google Cloud Speech-to-Text** e **Cloud Storage**, com foco também em diarização de falantes. Trabalhei na configuração e investigação da integração — projeto, bucket, credenciais e arquivos de resultado — no contexto de uma prova de conceito, sem apresentar isso como uma operação de produção em larga escala. Tenho cuidado com a separação de credenciais do código versionado, mas não fui responsável pela administração completa de **Cloud Run, IAM corporativo, Secret Manager ou alertas de orçamento**; nessas frentes, não atribuo a mim uma experiência que não tive.
+
+## 3. Apps Script / Google Sheets
+
+Já explorei **Google Apps Script** em protótipos para criar formulários automaticamente no **Google Forms**, em cenários ligados à avaliação de peças jurídicas e à análise de hipossuficiência. O objetivo era padronizar perguntas e escalas de avaliação, reduzindo o trabalho manual na preparação dos formulários. Não tenho um caso profissional consolidado de automação em **Google Sheets** com gatilhos recorrentes, volume conhecido de usuários e operação contínua; prefiro deixar essa limitação clara a apresentar o protótipo como solução implantada.
+
+## 4. APIs REST (Asana, Slack, Gmail, Pipedrive…)
+
+Grande parte da minha experiência é com **APIs REST corporativas**, tanto em Java quanto em Python. Além das integrações da DPE-GO com o Projudi/TJGO e dos serviços do Detran/Poupatempo na Prodesp, trabalhei com APIs em **FastAPI** para gestão de contratos, orçamento e diário de obras, usando **Pydantic, SQLAlchemy, SQL Server, autenticação JWT e autorização por permissões**. Nessas soluções, lidei com organização de rotas, regras de negócio, persistência, validação de payloads e integração entre serviços; no módulo de orçamento, por exemplo, há integração com serviços do SEI. No consumo de APIs, costumo usar Postman, rastreamento por logs e códigos HTTP para investigar falhas, como **timeouts e respostas 504**, e considero paginação, retentativas controladas e idempotência conforme a operação e o contrato do serviço. Não vou dizer que implementei integrações específicas com Asana, Slack, Gmail ou Pipedrive sem ter feito isso; a experiência que posso demonstrar é com integrações REST de sistemas corporativos.
+
+## 5. LLM, Claude, skills e MCP
+
+Na DPE-GO, trabalhei com soluções de **IA aplicada a documentos e serviços jurídicos**, envolvendo RAG, OCR, recuperação de contexto, extração de informações e validação humana. Também trabalhei em um projeto de **conferência de comprovantes de reembolso do SIGA**, estruturado em Python com **FastAPI, RabbitMQ e um consumer** que consulta dados no SQL Server, recupera os documentos e usa a **API da Anthropic** para analisar os comprovantes e devolver uma avaliação estruturada. Essa experiência reforça meu cuidado em separar tarefas interpretativas, adequadas ao modelo, das validações determinísticas e auditáveis, que devem ficar no código; alucinações, formatos instáveis e divergências de dados precisam ser tratados com verificações e testes. Nesta skill de triagem, apliquei o mesmo princípio: **as regras e o parecer são calculados por Python testado, e o Claude orquestra a execução e apresenta o resultado**. Tenho estudado e experimentado Claude Code, skills e agentes, mas não atribuo a mim uma implantação de MCP em produção que eu não possa demonstrar.
+
+## 6. Docker
+
+Tenho experiência prática com **conteinerização de APIs e serviços Python e Java**. Nos projetos de contratos, orçamento e diário de obras, trabalhei com aplicações **FastAPI executadas em Docker**, com Dockerfiles, Docker Compose e repositórios integrados a **pipelines de GitLab CI/CD**; no projeto de conferência de reembolsos do SIGA, a arquitetura separa **producer, RabbitMQ e consumer em contêineres**. Também tenho experiência com ambientes de implantação que utilizam **OpenShift**, em colaboração com times de infraestrutura/DevOps. Na configuração, procuro manter segredos fora do código e das imagens, usando variáveis de ambiente, arquivos locais não versionados e os mecanismos de *secrets* disponíveis no ambiente, conforme a infraestrutura de cada projeto.
+
+## 7. Django
+
+Tenho **experiência prática com desenvolvimento de backends web em Python**, especialmente com **FastAPI**, e com várias responsabilidades que também fazem parte do trabalho com Django e Django REST Framework. Em projetos de **gestão de contratos, orçamento e diário de obras**, desenvolvi e trabalhei com APIs REST, modelagem de entidades, camadas de serviços e repositórios, validação de dados com **Pydantic**, persistência com **SQLAlchemy/SQL Server**, autenticação por **JWT**, controle de permissões e execução em Docker. Também tenho como referência uma **API de atas**, com operações sobre reuniões, pautas, itens e participantes, e um **worker de reembolsos** integrado a RabbitMQ e à API da Anthropic. **Os projetos apresentados foram construídos em FastAPI, não em Django**; por isso, não vou afirmar que neles implementei Django ORM, Django Admin ou DRF. Minha experiência com essas arquiteturas e problemas de backend, porém, oferece uma base sólida para atuar em projetos Django, respeitando as particularidades do framework.
+

@@ -1,0 +1,9 @@
+{
+  "id": "P-004",
+  "area_degradada_ha": 1500,
+  "area_matricula_ha": 2000,
+  "area_car_ha": 2010,
+  "alerta_desmatamento": "15/03/2023",
+  "situacao_car": "Pendente",
+  "situacao_cadastral": "Regular"
+}

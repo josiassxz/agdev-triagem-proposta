@@ -1,0 +1,46 @@
+[
+  {
+    "id": "P-001",
+    "area_degradada_ha": 850,
+    "area_matricula_ha": 1200,
+    "area_car_ha": 1190,
+    "alerta_desmatamento": null,
+    "situacao_car": "Ativo",
+    "situacao_cadastral": "Regular"
+  },
+  {
+    "id": "P-002",
+    "area_degradada_ha": 60,
+    "area_matricula_ha": 300,
+    "area_car_ha": 298,
+    "alerta_desmatamento": null,
+    "situacao_car": "Ativo",
+    "situacao_cadastral": "Regular"
+  },
+  {
+    "id": "P-003",
+    "area_degradada_ha": 400,
+    "area_matricula_ha": 900,
+    "area_car_ha": 1000,
+    "alerta_desmatamento": null,
+    "situacao_car": "Ativo",
+    "situacao_cadastral": "Regular"
+  },
+  {
+    "id": "P-004",
+    "area_degradada_ha": 1500,
+    "area_matricula_ha": 2000,
+    "area_car_ha": 2010,
+    "alerta_desmatamento": "15/03/2023",
+    "situacao_car": "Pendente",
+    "situacao_cadastral": "Regular"
+  },
+  {
+    "id": "P-005",
+    "area_degradada_ha": 300,
+    "area_car_ha": 700,
+    "alerta_desmatamento": null,
+    "situacao_car": "Ativo",
+    "situacao_cadastral": "Pendente de regularização"
+  }
+]
