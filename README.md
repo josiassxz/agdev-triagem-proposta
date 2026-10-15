@@ -25,9 +25,9 @@ cd triagem-proposta
 # 1. Triagem dos 5 exemplos do enunciado
 python3 .claude/skills/triagem-proposta/scripts/triagem.py .claude/skills/triagem-proposta/exemplos/todas.json
 
-# 2. Testes automatizados (só os testes precisam do pytest)
-python3 -m pip install -r requirements-dev.txt
-python3 -m pytest
+# 2. Testes automatizados (só os testes precisam do pytest; instale antes de rodar)
+python3 -m pip install -r requirements-dev.txt   # instala o pytest
+python3 -m pytest                                 # 117 testes, menos de 1 s
 ```
 
 No Windows, troque `python3` por `python`.
