@@ -9,6 +9,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 A versão vale para `VERSAO_REGRAS` em `regras.py` e aparece no rodapé de todo card.
 
+## [2.0.0] — 2026-10-20
+
+### Alterado
+- R1: área degradada mínima passou de **100 ha** para **150 ha** (150 ha exatos passa).
+  Propostas com 100 ha a 149,99 ha, que antes seguiam, agora são RECUSADAS.
+  Nenhum dos 5 exemplos do enunciado muda de parecer; o motivo da P-002 passa a citar 150 ha.
+
 ## [1.0.0] — 2026-10-14
 
 ### Adicionado

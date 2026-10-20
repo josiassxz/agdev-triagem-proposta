@@ -7,20 +7,20 @@ Para mudar uma regra, altere apenas a seção PARÂMETROS abaixo, ajuste os
 testes e registre a mudança no CHANGELOG.md (ver DESIGN.md).
 """
 
-from __future__ import annotations
+from __future__ import annotations  # permite usar "str | None" nas anotações no Python 3.10
 
-from dataclasses import dataclass, field
-from datetime import date, datetime
-from decimal import Decimal
-from enum import Enum
+from dataclasses import dataclass, field  # classes de dados (Ocorrencia, Resultado)
+from datetime import date, datetime       # datas dos alertas de desmatamento (R2)
+from decimal import Decimal               # contas de área exatas, sem erro de ponto flutuante
+from enum import Enum                     # os três pareceres possíveis
 from typing import Any
 
 # ---------------------------------------------------------------------------
 # PARÂMETROS DAS REGRAS (único lugar a editar quando o comitê mudar algo)
 # ---------------------------------------------------------------------------
-VERSAO_REGRAS = "1.0.0"
+VERSAO_REGRAS = "2.0.0"
 
-AREA_MINIMA_HA = Decimal("100")                # R1: mínimo inclusivo
+AREA_MINIMA_HA = Decimal("150")                # R1: mínimo inclusivo
 DATA_CORTE_ALERTA = date(2020, 1, 1)           # R2: alerta *depois* desta data recusa
 TOLERANCIA_DIVERGENCIA_AREA = Decimal("0.05")  # R5: 5% da área da matrícula
 
@@ -41,13 +41,15 @@ CAMPOS_OBRIGATORIOS = (                        # R6
 # Campos em que `null` é um valor válido (e não "ausente").
 CAMPOS_ACEITAM_NULO = frozenset({"alerta_desmatamento"})
 
-FORMATOS_DATA = ("%d/%m/%Y", "%Y-%m-%d")
+FORMATOS_DATA = ("%d/%m/%Y", "%Y-%m-%d")      # R2: DD/MM/AAAA ou AAAA-MM-DD
 
 
 # ---------------------------------------------------------------------------
 # Tipos
 # ---------------------------------------------------------------------------
 class Parecer(str, Enum):
+    """Os três resultados possíveis da triagem. O valor é o texto mostrado no card."""
+
     SEGUE = "SEGUE"
     REVISAO_HUMANA = "REVISÃO HUMANA"
     RECUSADA = "RECUSADA"
@@ -61,12 +63,13 @@ _GRAVIDADE = {Parecer.SEGUE: 0, Parecer.REVISAO_HUMANA: 1, Parecer.RECUSADA: 2}
 class Ocorrencia:
     """Uma regra que falhou: o motivo (o que aconteceu) e a pendência (o que fazer)."""
 
-    regra: str
-    efeito: Parecer
-    motivo: str
-    pendencia: str
+    regra: str        # "R1" a "R6"
+    efeito: Parecer   # REVISAO_HUMANA ou RECUSADA (uma regra que passa não gera ocorrência)
+    motivo: str       # explicação com os números que levaram à falha
+    pendencia: str    # ação concreta para o analista resolver
 
     def to_dict(self) -> dict[str, str]:
+        """Versão em dicionário, usada na saída --formato json."""
         return {
             "regra": self.regra,
             "efeito": self.efeito.value,
@@ -77,18 +80,22 @@ class Ocorrencia:
 
 @dataclass
 class Resultado:
-    id: str | None
-    parecer: Parecer
-    ocorrencias: list[Ocorrencia]
-    pendencias: list[str]
-    nao_avaliadas: list[str] = field(default_factory=list)
-    versao_regras: str = VERSAO_REGRAS
+    """Tudo o que a triagem de uma proposta produz. É o que card.py transforma em Markdown."""
+
+    id: str | None                    # id da proposta (None se veio ausente ou vazio)
+    parecer: Parecer                  # parecer final (o efeito mais grave encontrado)
+    ocorrencias: list[Ocorrencia]     # todas as regras que falharam, em ordem R1..R6
+    pendencias: list[str]             # lista de ações, já montada para o card
+    nao_avaliadas: list[str] = field(default_factory=list)  # regras puladas por falta de dado
+    versao_regras: str = VERSAO_REGRAS  # vai no rodapé do card, para auditoria
 
     @property
     def motivos(self) -> list[str]:
+        """Motivos em texto simples: ["R1: área degradada de ...", ...]."""
         return [f"{o.regra}: {o.motivo}" for o in self.ocorrencias]
 
     def to_dict(self) -> dict[str, Any]:
+        """Versão em dicionário, usada na saída --formato json."""
         return {
             "id": self.id,
             "parecer": self.parecer.value,
@@ -118,6 +125,7 @@ def _area(valor: Any) -> Decimal | None:
 
 
 def _data(valor: Any) -> date | None:
+    """Converte texto em data, tentando cada formato aceito. Devolve None se não for legível."""
     if not isinstance(valor, str):
         return None
     texto = valor.strip()
@@ -138,10 +146,12 @@ def _fmt_ha(valor: Decimal) -> str:
 
 
 def _fmt_data(valor: date) -> str:
+    """date(2023, 3, 15) -> '15/03/2023'."""
     return valor.strftime("%d/%m/%Y")
 
 
 def _campo_ausente(proposta: dict[str, Any], campo: str) -> bool:
+    """Ausente = chave que não existe, null (exceto em alerta_desmatamento) ou texto vazio."""
     if campo not in proposta:
         return True
     valor = proposta[campo]
@@ -155,7 +165,11 @@ def _campo_ausente(proposta: dict[str, Any], campo: str) -> bool:
 # ---------------------------------------------------------------------------
 # Regras
 # ---------------------------------------------------------------------------
+# Cada regra recebe a proposta e devolve uma lista de ocorrências:
+# lista vazia = a regra passou.
+
 def _r1_area_minima(p: dict[str, Any]) -> list[Ocorrencia]:
+    """R1: área degradada abaixo de 150 ha recusa. Valor inválido vai para revisão."""
     area = _area(p["area_degradada_ha"])
     if area is None:
         return [Ocorrencia(
@@ -174,6 +188,11 @@ def _r1_area_minima(p: dict[str, Any]) -> list[Ocorrencia]:
 
 
 def _r2_alerta_desmatamento(p: dict[str, Any]) -> list[Ocorrencia]:
+    """R2: alerta de desmatamento depois de 01/01/2020 recusa.
+
+    Aceita null (sem alerta), uma data ou uma lista de datas.
+    """
+    # 1. Transforma qualquer formato aceito em uma lista de alertas.
     bruto = p["alerta_desmatamento"]
     if bruto is None:
         alertas: list[Any] = []
@@ -189,6 +208,8 @@ def _r2_alerta_desmatamento(p: dict[str, Any]) -> list[Ocorrencia]:
             "Conferir os alertas de desmatamento do imóvel na fonte oficial.",
         )]
 
+    # 2. Separa os alertas posteriores ao corte e as datas ilegíveis.
+    #    Alertas até a data de corte (inclusive) são ignorados.
     posteriores: list[date] = []
     invalidos: list[Any] = []
     for alerta in alertas:
@@ -198,9 +219,11 @@ def _r2_alerta_desmatamento(p: dict[str, Any]) -> list[Ocorrencia]:
         elif data_alerta > DATA_CORTE_ALERTA:
             posteriores.append(data_alerta)
 
+    # 3. Gera as ocorrências. As duas podem sair juntas: uma data ilegível
+    #    não esconde um alerta válido.
     ocorrencias: list[Ocorrencia] = []
     if posteriores:
-        unicas = sorted(set(posteriores))
+        unicas = sorted(set(posteriores))  # remove datas repetidas e ordena
         datas = ", ".join(_fmt_data(d) for d in unicas)
         plural = "s" if len(unicas) > 1 else ""
         ocorrencias.append(Ocorrencia(
@@ -220,6 +243,7 @@ def _r2_alerta_desmatamento(p: dict[str, Any]) -> list[Ocorrencia]:
 
 
 def _r3_situacao_car(p: dict[str, Any]) -> list[Ocorrencia]:
+    """R3: Ativo passa; Pendente vai para revisão; Cancelado/Suspenso recusa; outro valor, revisão."""
     bruto = p["situacao_car"]
     valor = _normalizar_texto(bruto) if isinstance(bruto, str) else None
     if valor in CAR_SEGUE:
@@ -245,6 +269,7 @@ def _r3_situacao_car(p: dict[str, Any]) -> list[Ocorrencia]:
 
 
 def _r4_situacao_cadastral(p: dict[str, Any]) -> list[Ocorrencia]:
+    """R4: só CPF/CNPJ "Regular" passa; qualquer outra situação vai para revisão."""
     bruto = p["situacao_cadastral"]
     valor = _normalizar_texto(bruto) if isinstance(bruto, str) else None
     if valor in SITUACAO_CADASTRAL_SEGUE:
@@ -258,8 +283,10 @@ def _r4_situacao_cadastral(p: dict[str, Any]) -> list[Ocorrencia]:
 
 
 def _r5_divergencia_area(p: dict[str, Any]) -> list[Ocorrencia]:
+    """R5: diferença entre matrícula e CAR acima de 5% da matrícula vai para revisão."""
     matricula = _area(p["area_matricula_ha"])
     car = _area(p["area_car_ha"])
+    # Se alguma das áreas for inválida, não dá para comparar: aponta qual e para.
     ocorrencias: list[Ocorrencia] = []
     for campo, valor in (("area_matricula_ha", matricula), ("area_car_ha", car)):
         if valor is None:
@@ -271,8 +298,8 @@ def _r5_divergencia_area(p: dict[str, Any]) -> list[Ocorrencia]:
     if ocorrencias:
         return ocorrencias
 
-    diferenca = abs(matricula - car)
-    limite = matricula * TOLERANCIA_DIVERGENCIA_AREA
+    diferenca = abs(matricula - car)                  # tanto faz qual é maior
+    limite = matricula * TOLERANCIA_DIVERGENCIA_AREA  # 5% calculado sobre a matrícula
     if diferenca > limite:  # exatamente no limite NÃO aciona ("maior que")
         percentual = _percentual_acima_do_limite(diferenca, matricula)
         return [Ocorrencia(
@@ -306,6 +333,7 @@ _REGRAS = (
     ("R5", ("area_matricula_ha", "area_car_ha"), _r5_divergencia_area),
 )
 
+# Textos usados nas pendências de uma proposta RECUSADA (ver _pendencias).
 PENDENCIA_RECUSA = "Comunicar a recusa ao proponente, citando os motivos acima."
 PREFIXO_PENDENCIA_EM_RECUSA = "Se a proposta for reapresentada: "
 
@@ -318,6 +346,7 @@ def avaliar(proposta: dict[str, Any]) -> Resultado:
     if not isinstance(proposta, dict):
         raise TypeError("a proposta deve ser um objeto JSON (dicionário)")
 
+    # 1. R6: uma ocorrência de revisão para cada campo obrigatório ausente.
     ausentes = [c for c in CAMPOS_OBRIGATORIOS if _campo_ausente(proposta, c)]
     ocorrencias: list[Ocorrencia] = [
         Ocorrencia(
@@ -328,6 +357,8 @@ def avaliar(proposta: dict[str, Any]) -> Resultado:
         for campo in ausentes
     ]
 
+    # 2. R1 a R5: roda todas as regras, sem parar na primeira falha. A regra
+    #    que depende de um campo ausente é pulada e listada como "não avaliada".
     nao_avaliadas: list[str] = []
     for regra, dependencias, funcao in _REGRAS:
         faltando = [c for c in dependencias if c in ausentes]
@@ -338,12 +369,16 @@ def avaliar(proposta: dict[str, Any]) -> Resultado:
 
     ocorrencias.sort(key=lambda o: o.regra)  # ordem estável R1..R6
 
+    # 3. O parecer é o efeito mais grave: RECUSADA > REVISÃO HUMANA > SEGUE.
+    #    Sem nenhuma ocorrência, a proposta SEGUE.
     parecer = max(
         (o.efeito for o in ocorrencias), key=_GRAVIDADE.__getitem__, default=Parecer.SEGUE
     )
 
+    # 4. Lista de ações para o analista.
     pendencias = _pendencias(parecer, ocorrencias)
 
+    # 5. Normaliza o id: número vira texto; ausente ou vazio vira None.
     id_bruto = proposta.get("id")
     if isinstance(id_bruto, (int, float)) and not isinstance(id_bruto, bool):
         id_bruto = str(id_bruto)
@@ -370,6 +405,7 @@ def _pendencias(parecer: Parecer, ocorrencias: list[Ocorrencia]) -> list[str]:
 
 
 def _sem_repeticao(itens) -> list[str]:
+    """Remove itens repetidos mantendo a ordem original (o dict preserva a ordem de inserção)."""
     vistos: dict[str, None] = {}
     for item in itens:
         vistos.setdefault(item, None)

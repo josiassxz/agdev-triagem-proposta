@@ -22,13 +22,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from card import gerar_card
-from regras import VERSAO_REGRAS, avaliar
+from card import gerar_card                 # Resultado -> Markdown
+from regras import VERSAO_REGRAS, avaliar   # proposta -> Resultado
 
-ERRO_ENTRADA = 2
+ERRO_ENTRADA = 2  # código de saída para entrada inválida
 
 
 def _ler_entrada(origem: str) -> Any:
+    """Lê o JSON de um arquivo ou, se a origem for '-', da entrada padrão."""
     if origem == "-":
         texto = sys.stdin.buffer.read().decode("utf-8-sig")
     else:
@@ -37,10 +38,12 @@ def _ler_entrada(origem: str) -> Any:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Lê as propostas, roda a triagem e imprime o resultado. Devolve o código de saída."""
     for fluxo in (sys.stdout, sys.stderr):  # acentos e emojis no Windows
         if hasattr(fluxo, "reconfigure"):
             fluxo.reconfigure(encoding="utf-8")
 
+    # 1. Argumentos da linha de comando.
     parser = argparse.ArgumentParser(
         prog="triagem",
         description="Triagem de propostas de recuperação de pastagem (regras R1–R6).",
@@ -53,6 +56,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--versao", action="version", version=f"regras v{VERSAO_REGRAS}")
     args = parser.parse_args(argv)
 
+    # 2. Leitura do JSON. Cada erro tem uma mensagem clara e sai com código 2, sem parecer.
     try:
         dados = _ler_entrada(args.entrada)
     except FileNotFoundError:
@@ -70,6 +74,8 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
         return ERRO_ENTRADA
 
+    # 3. Aceita uma proposta ou uma lista. Valida tudo antes de avaliar, para não
+    #    emitir parecer parcial de um lote com item inválido.
     propostas = dados if isinstance(dados, list) else [dados]
     if not propostas:
         print("Erro: a lista de propostas está vazia.", file=sys.stderr)
@@ -79,8 +85,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Erro: o item {posicao} não é um objeto JSON de proposta.", file=sys.stderr)
             return ERRO_ENTRADA
 
+    # 4. Triagem: o parecer sai daqui, do motor em regras.py.
     resultados = [avaliar(p) for p in propostas]
 
+    # 5. Saída: JSON (objeto ou lista, igual à entrada) ou cards em Markdown.
     if args.formato == "json":
         saida = [r.to_dict() for r in resultados]
         print(json.dumps(saida if isinstance(dados, list) else saida[0],

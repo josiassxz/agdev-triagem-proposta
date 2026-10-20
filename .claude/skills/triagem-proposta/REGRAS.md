@@ -1,4 +1,4 @@
-# Regras da triagem — versão 1.0.0
+# Regras da triagem — versão 2.0.0
 
 > Regras fictícias do teste prático da AgDev. Não representam a política de crédito.
 
@@ -16,7 +16,7 @@ Todos os motivos aparecem no card, inclusive os que não decidiram o parecer.
 
 | Regra | O que é verificado | Resultado se não passar |
 |---|---|---|
-| **R1** | Área de pastagem degradada de **pelo menos** 100 ha (100 ha exatos passa) | RECUSADA |
+| **R1** | Área de pastagem degradada de **pelo menos** 150 ha (150 ha exatos passa) | RECUSADA |
 | **R2** | Nenhum alerta de desmatamento **depois de** 01/01/2020 (um alerta no próprio dia 01/01/2020 não recusa) | RECUSADA |
 | **R3** | Situação do CAR "Ativo" | "Pendente" → REVISÃO HUMANA · "Cancelado" ou "Suspenso" → RECUSADA · outro valor → REVISÃO HUMANA |
 | **R4** | Situação cadastral do CPF/CNPJ "Regular" | REVISÃO HUMANA |

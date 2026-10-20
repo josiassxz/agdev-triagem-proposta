@@ -1,3 +1,9 @@
+"""Configuração do pytest: torna os módulos da skill importáveis nos testes.
+
+Os scripts ficam em .claude/skills/triagem-proposta/scripts/ e não são um pacote
+instalado; por isso a pasta é colocada no sys.path para `from regras import ...`.
+"""
+
 import sys
 from pathlib import Path
 

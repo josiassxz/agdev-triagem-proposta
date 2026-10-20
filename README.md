@@ -5,7 +5,7 @@ antes do comitê de crédito. Recebe a proposta em JSON, aplica as regras R1–R
 e devolve o parecer — **SEGUE**, **RECUSADA** ou **REVISÃO HUMANA** — com todos os motivos,
 as pendências e um card em Markdown pronto para virar tarefa.
 
-> Teste prático AgDev · Josias Silva Siqueira · regras fictícias, versão 1.0.0
+> Teste prático AgDev · Josias Silva Siqueira · regras fictícias, versão 2.0.0
 
 ```text
 proposta.json ──► Claude (skill) ──► scripts/triagem.py ──► parecer + motivos + pendências + card
@@ -74,7 +74,7 @@ item que não é objeto), com mensagem de erro e sem parecer.
 | ID | Parecer | Motivos |
 |---|---|---|
 | P-001 | 🟢 SEGUE | — (diferença de 10 ha, limite de 60 ha) |
-| P-002 | 🔴 RECUSADA | R1: 60 ha, abaixo de 100 ha |
+| P-002 | 🔴 RECUSADA | R1: 60 ha, abaixo de 150 ha |
 | P-003 | 🟡 REVISÃO HUMANA | R5: diferença de 100 ha = 11,11% da matrícula (limite 45 ha) |
 | P-004 | 🔴 RECUSADA | R2: alerta em 15/03/2023 · R3: CAR "Pendente" |
 | P-005 | 🟡 REVISÃO HUMANA | R4: "Pendente de regularização" · R6: falta `area_matricula_ha` (R5 não avaliada) |
@@ -97,15 +97,15 @@ Exemplo de card (P-004):
 - [ ] Se a proposta for reapresentada: verificar no SICAR o motivo da pendência do CAR e solicitar a regularização ao proponente.
 
 ---
-_Triagem automática · regras v1.0.0 · não substitui a análise do comitê de crédito._
+_Triagem automática · regras v2.0.0 · não substitui a análise do comitê de crédito._
 ```
 
 ## Testes
 
-117 testes em `tests/`, rodando no GitHub Actions a cada push (Python 3.10 a 3.13). Cobrem:
+121 testes em `tests/`, rodando no GitHub Actions a cada push (Python 3.10 a 3.13). Cobrem:
 
 - os 5 exemplos do enunciado, com o resultado esperado definido por nós;
-- cada regra com caso positivo, negativo e de borda: 100 ha exatos, diferença de **exatamente 5%**
+- cada regra com caso positivo, negativo e de borda: 150 ha exatos, diferença de **exatamente 5%**
   (e 5,001%), alerta no próprio dia do corte e no dia seguinte, lista de alertas, normalização de texto;
 - campo ausente × campo nulo, valores inválidos, precedência RECUSADA > REVISÃO, acúmulo de motivos;
 - uma armadilha de ponto flutuante real (102,1 ha × 107,205 ha), que daria falso positivo sem `Decimal`;
